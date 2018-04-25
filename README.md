@@ -1,3 +1,8 @@
+# NSPredicate Parser For Android Realm
+
+// TODO: insert new README
+
+# ----- Original README -----
 # My first Realm App
 
 [![GitHub license](https://img.shields.io/badge/license-Apache-blue.svg)](https://raw.githubusercontent.com/realm/my-first-realm-app/LICENSE)
