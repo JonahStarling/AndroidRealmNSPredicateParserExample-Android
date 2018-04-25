@@ -23,6 +23,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -112,5 +113,26 @@ public class ItemsActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_items, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.query_one) {
+            Log.d("Query Selected", "Query One");
+            return true;
+        } else if (item.getItemId() == R.id.query_two) {
+            Log.d("Query Selected", "Query Two");
+            return true;
+        } else if (item.getItemId() == R.id.query_three) {
+            Log.d("Query Selected", "Query Three");
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

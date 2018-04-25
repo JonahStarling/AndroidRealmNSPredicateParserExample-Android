@@ -13,5 +13,8 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="query_one">Query One</string>
+    <string name="query_two">Query Two</string>
+    <string name="query_three">Query Three</string>
 
 </resources>
