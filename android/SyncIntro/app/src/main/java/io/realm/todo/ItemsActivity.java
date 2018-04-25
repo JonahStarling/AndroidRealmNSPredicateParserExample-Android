@@ -101,9 +101,7 @@ public class ItemsActivity extends AppCompatActivity {
     }
 
     private RealmResults<Item> setUpRealm() {
-        Realm.setDefaultConfiguration(SyncConfiguration.automatic());
         realm = Realm.getDefaultInstance();
-
         return realm
                 .where(Item.class)
                 .sort("timestamp", Sort.DESCENDING)
@@ -114,26 +112,5 @@ public class ItemsActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         realm.close();
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_items, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
-            SyncUser syncUser = SyncUser.current();
-            if (syncUser != null) {
-                syncUser.logOut();
-                Intent intent = new Intent(this, WelcomeActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
-            }
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
