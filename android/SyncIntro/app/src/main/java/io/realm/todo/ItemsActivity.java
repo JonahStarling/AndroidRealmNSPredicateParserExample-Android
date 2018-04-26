@@ -31,11 +31,13 @@ import android.view.View;
 import android.widget.EditText;
 
 import io.realm.Realm;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 import io.realm.SyncConfiguration;
 import io.realm.SyncUser;
 import io.realm.todo.model.Item;
+import io.realm.todo.parser.NSPredicateParser;
 import io.realm.todo.ui.ItemsRecyclerAdapter;
 
 public class ItemsActivity extends AppCompatActivity {
@@ -125,12 +127,26 @@ public class ItemsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.query_one) {
             Log.d("Query Selected", "Query One");
+            String predicate = "isDone == false && body == 'jonah'";
+            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
+            RealmQuery query = parser.parsePredicate();
+            Log.d("query built", query.toString());
+            Log.d("results",query.findAll().toString());
             return true;
         } else if (item.getItemId() == R.id.query_two) {
             Log.d("Query Selected", "Query Two");
+//            String predicate = "body == 'jonah'";
+//            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
+//            RealmQuery query = parser.parsePredicate();
+            RealmQuery query = realm.where(Item.class);
+            Log.d("results",query.findAll().toString());
             return true;
         } else if (item.getItemId() == R.id.query_three) {
             Log.d("Query Selected", "Query Three");
+            String predicate = "isDone == false || body == 'jonah'";
+            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
+            RealmQuery query = parser.parsePredicate();
+            Log.d("results",query.findAll().toString());
             return true;
         }
         return super.onOptionsItemSelected(item);
