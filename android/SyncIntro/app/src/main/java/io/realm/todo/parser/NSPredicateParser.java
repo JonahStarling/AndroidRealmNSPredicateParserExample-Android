@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -15,16 +16,18 @@ public class NSPredicateParser <T extends RealmObject> {
 
     private String predicate;
     private ArrayList<RealmQueryPart> realmQueryParts;
+    private ArrayList<String> variableStack;
     private Class<T> objectClass;
     private RealmQuery<T> realmQuery;
     private Realm realm;
     private EnumSet<NSPredicateEnum> predicateEnums;
 
 
-    public NSPredicateParser(Realm realm, String predicate, Class<T> objectClass) {
+    public NSPredicateParser(Realm realm, String predicate, Class<T> objectClass, ArrayList<String> variableStack) {
         this.realm = realm;
         this.predicate = predicate;
         this.objectClass = objectClass;
+        this.variableStack = variableStack;
 
         this.realmQueryParts = new ArrayList<>();
         this.realmQuery = realm.where(objectClass);
@@ -38,16 +41,22 @@ public class NSPredicateParser <T extends RealmObject> {
         NSPredicateEnum currentPartPredicateEnum = null;
         List currentPartVariables = null;
         int piecesToLookFor = 0;
+        int endGroupsToAdd = 0;
         for (String predicatePart : predicateParts) {
             if (lookingForPieces) {
-                Log.d("Piece we're looking for", predicatePart);
                 lookingForPieces = false;
+                endGroupsToAdd = checkForEndGroup(predicatePart);
+                if (endGroupsToAdd != 0) {
+                    predicatePart = predicatePart.substring(0, predicatePart.length() - endGroupsToAdd);
+                }
                 currentPartVariables = parseAndCastVariables(uncaughtPiece, predicatePart);
                 this.realmQueryParts.add(new RealmQueryPart(currentPartPredicateEnum, currentPartVariables));
+                addEndGroups(endGroupsToAdd);
+                endGroupsToAdd = 0;
             } else {
+                predicatePart = checkForBeginGroup(predicatePart);
                 NSPredicateEnum predicateEnum = knownCommand(predicatePart);
                 if (predicateEnum != null) {
-                    Log.d("Hey I know that guy", predicatePart);
                     currentPartPredicateEnum = predicateEnum;
                     if (predicateEnum.getPiecesNeeded() == 0) {
                         this.realmQueryParts.add(new RealmQueryPart(currentPartPredicateEnum, currentPartVariables));
@@ -55,7 +64,6 @@ public class NSPredicateParser <T extends RealmObject> {
                         lookingForPieces = true;
                     }
                 } else {
-                    Log.d("Uncaught Piece", predicatePart);
                     uncaughtPiece = predicatePart;
                 }
             }
@@ -83,73 +91,78 @@ public class NSPredicateParser <T extends RealmObject> {
         for (RealmQueryPart realmQueryPart : this.realmQueryParts) {
             switch(realmQueryPart.predicateEnum) {
                 case EQUAL_TO: {
-                    Object var0 = realmQueryPart.variables.get(0);
-                    Object var1 = realmQueryPart.variables.get(1);
-                    if (var0 instanceof String) {
-                        if (var1 instanceof String) {
-                            realmQuery.equalTo((String) var0, (String) var1);
-                        } else if (var1 instanceof Boolean) {
-                            realmQuery.equalTo((String) var0, (Boolean) var1);
-                        }
-                        // TODO: add the million other possibilities
-                    } else {
-                        Log.w("Failed Query Build", "failed in equal_to: " + realmQueryPart.toString());
-                    }
+                    NSPredicateLogic.equalToLogic(realmQuery, realmQueryPart);
                     break;
                 }
                 case NOT_EQUAL_TO: {
-
+                    NSPredicateLogic.notEqualToLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case IN: {
-
+                    NSPredicateLogic.inLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case GREATER_THAN: {
-
+                    NSPredicateLogic.greaterThanLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case LESS_THAN: {
-
+                    NSPredicateLogic.lessThanLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case GREATER_THAN_OR_EQUAL_TO: {
-
+                    NSPredicateLogic.greaterThanOrEqualToLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case LESS_THAN_OR_EQUAL_TO: {
-
+                    NSPredicateLogic.lessThanOrEqualToLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case AND: {
-                    realmQuery.and();
+                    NSPredicateLogic.andLogic(realmQuery);
+                    break;
                 }
                 case OR: {
-                    realmQuery.or();
+                    NSPredicateLogic.orLogic(realmQuery);
+                    break;
                 }
                 case NOT: {
-
+                    NSPredicateLogic.notLogic(realmQuery);
                 }
                 case BEGINS_WITH: {
-
+                    NSPredicateLogic.beginsWithLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case ENDS_WITH: {
-
+                    NSPredicateLogic.endsWithLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case CONTAINS: {
-
+                    NSPredicateLogic.containsLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case LIKE: {
-
+                    NSPredicateLogic.likeLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case ANY: {
-
+                    NSPredicateLogic.anyLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case SOME: {
-
+                    NSPredicateLogic.someLogic(realmQuery, realmQueryPart);
+                    break;
                 }
                 case BEGIN_GROUP: {
-
+                    NSPredicateLogic.beginGroupLogic(realmQuery);
+                    break;
                 }
                 case END_GROUP: {
-
+                    NSPredicateLogic.endGroupLogic(realmQuery);
+                    break;
                 }
                 default: {
-                    Log.d("BuildRealmQuery", "defaulted: " + realmQueryPart.toString());
+                    Log.w("BuildRealmQuery", "defaulted: " + realmQueryPart.toString());
                 }
             }
         }
@@ -157,7 +170,9 @@ public class NSPredicateParser <T extends RealmObject> {
     }
 
     private List parseAndCastVariables(String var0, String var1) {
-        if (var1.startsWith("'") && var1.endsWith("'")) {
+        if (var1.equals("\"%@\"") || var1.equals("'%@'")) {
+            // TODO: add logic for variable stack
+        } else if (var1.startsWith("'") && var1.endsWith("'")) {
             var1 = var1.substring(1, var1.length()-1);
             return Arrays.asList(var0, var1);
         } else if (var1.startsWith("\"") && var1.endsWith("\"")) {
@@ -167,8 +182,73 @@ public class NSPredicateParser <T extends RealmObject> {
             return Arrays.asList(var0, true);
         } else if (var1.equalsIgnoreCase("false")) {
             return Arrays.asList(var0, false);
+        } else if (var1.matches("^[0-9]*$")) {
+            try {
+                Integer intVar1 = Integer.valueOf(var1);
+                return Arrays.asList(var0, intVar1);
+            } catch (NumberFormatException e1) {
+                try {
+                    Long longVar1 = Long.valueOf(var1);
+                    return Arrays.asList(var0, longVar1);
+                } catch (NumberFormatException e2) {
+                    Log.w("UncaughtCast","Nothing to cast it to!");
+                    e1.printStackTrace();
+                    e2.printStackTrace();
+                }
+            }
+        } else if (var1.matches("^[0-9]*[.][0-9]*$")) {
+            try {
+                Float floatVar1 = Float.valueOf(var1);
+                return Arrays.asList(var0, floatVar1);
+            } catch (NumberFormatException e1) {
+                try {
+                    Double doubleVar1 = Double.valueOf(var1);
+                    return Arrays.asList(var0, doubleVar1);
+                } catch (NumberFormatException e2) {
+                    Log.w("UncaughtCast", "Nothing to cast it to!");
+                    e1.printStackTrace();
+                    e2.printStackTrace();
+                }
+            }
         }
         return Arrays.asList(var0, var1);
+    }
+
+    private String checkForBeginGroup(String predicate) {
+        Boolean beginGroupFound;
+        do {
+            if (predicate.startsWith("(")) {
+                beginGroupFound = true;
+                predicate = predicate.substring(1, predicate.length());
+                realmQueryParts.add(new RealmQueryPart(NSPredicateEnum.BEGIN_GROUP, null));
+            } else {
+                beginGroupFound = false;
+            }
+        } while (beginGroupFound);
+        return predicate;
+    }
+
+    private int checkForEndGroup(String predicate) {
+        Boolean endGroupFound;
+        int endGroupsToAdd = 0;
+        do {
+            if (predicate.endsWith(")")) {
+                endGroupFound = true;
+                predicate = predicate.substring(0, predicate.length()-1);
+                endGroupsToAdd++;
+            } else {
+                endGroupFound = false;
+            }
+        } while (endGroupFound);
+        return endGroupsToAdd;
+    }
+
+    private void addEndGroups(int endGroupsToAdd) {
+        if (endGroupsToAdd != 0) {
+            for (int i = 0; i < endGroupsToAdd; i++) {
+                this.realmQueryParts.add(new RealmQueryPart(NSPredicateEnum.END_GROUP, null));
+            }
+        }
     }
 
 }

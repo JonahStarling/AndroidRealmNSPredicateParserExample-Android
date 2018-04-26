@@ -127,19 +127,18 @@ public class ItemsActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.query_one) {
             Log.d("Query Selected", "Query One");
-            String predicate = "isDone == false && body == 'jonah'";
+            String predicate = "(body == 'jonah' && isDone != True) OR NOT body == 'zach'";
             NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
             RealmQuery query = parser.parsePredicate();
-            Log.d("query built", query.toString());
-            Log.d("results",query.findAll().toString());
+            try {
+                Log.d("results", query.findAll().toString());
+            } catch (UnsupportedOperationException e) {
+                e.printStackTrace();
+            }
             return true;
         } else if (item.getItemId() == R.id.query_two) {
             Log.d("Query Selected", "Query Two");
-//            String predicate = "body == 'jonah'";
-//            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
-//            RealmQuery query = parser.parsePredicate();
-            RealmQuery query = realm.where(Item.class);
-            Log.d("results",query.findAll().toString());
+//            Log.d("results",query.findAll().toString());
             return true;
         } else if (item.getItemId() == R.id.query_three) {
             Log.d("Query Selected", "Query Three");
