@@ -16,14 +16,13 @@ public class NSPredicateParser <T extends RealmObject> {
 
     private String predicate;
     private ArrayList<RealmQueryPart> realmQueryParts;
-    private ArrayList<String> variableStack;
+    private ArrayList<Object> variableStack;
     private Class<T> objectClass;
     private RealmQuery<T> realmQuery;
     private Realm realm;
     private EnumSet<NSPredicateEnum> predicateEnums;
 
-
-    public NSPredicateParser(Realm realm, String predicate, Class<T> objectClass, ArrayList<String> variableStack) {
+    public NSPredicateParser(Realm realm, String predicate, Class<T> objectClass, ArrayList<Object> variableStack) {
         this.realm = realm;
         this.predicate = predicate;
         this.objectClass = objectClass;
@@ -170,8 +169,12 @@ public class NSPredicateParser <T extends RealmObject> {
     }
 
     private List parseAndCastVariables(String var0, String var1) {
-        if (var1.equals("\"%@\"") || var1.equals("'%@'")) {
-            // TODO: add logic for variable stack
+        if (var1.equals("%@")) {
+            if (this.variableStack.size() >= 1) {
+                List list = Arrays.asList(var0, this.variableStack.get(0));
+                this.variableStack.remove(0);
+                return list;
+            }
         } else if (var1.startsWith("'") && var1.endsWith("'")) {
             var1 = var1.substring(1, var1.length()-1);
             return Arrays.asList(var0, var1);

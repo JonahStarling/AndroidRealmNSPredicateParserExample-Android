@@ -2,6 +2,7 @@ package io.realm.todo.parser;
 
 import android.util.Log;
 import java.util.Date;
+
 import io.realm.RealmQuery;
 
 public class NSPredicateLogic {

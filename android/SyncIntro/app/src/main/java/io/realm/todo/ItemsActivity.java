@@ -30,6 +30,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -128,7 +133,7 @@ public class ItemsActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.query_one) {
             Log.d("Query Selected", "Query One");
             String predicate = "(body == 'jonah' && isDone != True) OR NOT body == 'zach'";
-            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
+            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class, null);
             RealmQuery query = parser.parsePredicate();
             try {
                 Log.d("results", query.findAll().toString());
@@ -138,12 +143,22 @@ public class ItemsActivity extends AppCompatActivity {
             return true;
         } else if (item.getItemId() == R.id.query_two) {
             Log.d("Query Selected", "Query Two");
-//            Log.d("results",query.findAll().toString());
+            String predicate = "body == %@ && timestamp > %@";
+            ArrayList<Object> variableStack = new ArrayList<>();
+            variableStack.add("jonah");
+            variableStack.add(new GregorianCalendar(2018, 3, 26, 8, 0).getTime());
+            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class, variableStack);
+            RealmQuery query = parser.parsePredicate();
+            try {
+                Log.d("results", query.findAll().toString());
+            } catch (UnsupportedOperationException e) {
+                e.printStackTrace();
+            }
             return true;
         } else if (item.getItemId() == R.id.query_three) {
             Log.d("Query Selected", "Query Three");
             String predicate = "isDone == false || body == 'jonah'";
-            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class);
+            NSPredicateParser<Item> parser = new NSPredicateParser<>(realm, predicate, Item.class, null);
             RealmQuery query = parser.parsePredicate();
             Log.d("results",query.findAll().toString());
             return true;
