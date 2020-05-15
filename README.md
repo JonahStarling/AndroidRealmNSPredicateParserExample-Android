@@ -1,9 +1,7 @@
 # NSPredicate Parser For Android Realm
+This is forked from the realm "my first realm app" repo and serves as an example of how the NSPredicateParser I built works. Pretty straightforward.
 
-// TODO: insert new README
-
-# ----- Original README -----
-# My first Realm App
+# Original README: My first Realm App
 
 [![GitHub license](https://img.shields.io/badge/license-Apache-blue.svg)](https://raw.githubusercontent.com/realm/my-first-realm-app/LICENSE)
 
